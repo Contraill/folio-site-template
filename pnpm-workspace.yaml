@@ -1,0 +1,6 @@
+allowBuilds:
+  esbuild: true
+# A peer range lets pnpm pick the 2.0 beta of the WebAssembly runtime, which crashes astro check: stay on the release.
+overrides:
+  '@emnapi/runtime': ^1.11.3
+  '@emnapi/core': ^1.11.3

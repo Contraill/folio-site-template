@@ -1,0 +1,95 @@
+---
+import { getCollection, render } from 'astro:content';
+import Page from '../layouts/Page.astro';
+import { seal } from '../lib/seal';
+import { access, sealer } from '../lib/site';
+
+/* Every page of the site. For a password site, only its ciphertext reaches the page: title, text and menu are sealed
+   together, and the page says nothing but that it is protected. */
+export async function getStaticPaths() {
+  const pages = (await getCollection('pages')).sort((a, b) => (a.data.order ?? 99) - (b.data.order ?? 99));
+  const nav = pages.map((p): [string, string] => [p.id === 'index' ? '/' : `/${p.id}`, p.data.title]);
+  return pages.map((entry) => ({ params: { slug: entry.id === 'index' ? undefined : entry.id }, props: { entry, nav } }));
+}
+const { entry, nav } = Astro.props;
+const path = entry.id === 'index' ? '/' : `/${entry.id}`;
+const { Content } = await render(entry);
+let payload: string | undefined;
+if (access === 'password') {
+  const html = entry.rendered?.html;
+  if (html === undefined) throw new Error(`${path}: nothing to seal`);
+  const { key, salt } = await sealer();
+  payload = JSON.stringify(await seal(key, salt, JSON.stringify({ title: entry.data.title, html, nav }), path));
+}
+---
+{payload ? (
+  <Page title="Protected site" robots="noindex, nofollow">
+    <div id="locked" data-folio-sealed>
+      <h1>This site is protected</h1>
+      <p>Its pages are encrypted. The password opens them here, in your browser; it is never sent anywhere.</p>
+      <form id="open">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <button type="submit">Open</button>
+      </form>
+      <p id="status" class="note" role="status" aria-live="polite"></p>
+    </div>
+    <article id="opened" hidden></article>
+    <script type="application/json" id="sealed" set:html={payload} />
+  </Page>
+) : (
+  <Page title={entry.data.title} description={entry.data.description} nav={nav} current={path}>
+    <h1>{entry.data.title}</h1>
+    <Content />
+  </Page>
+)}
+<script>
+  import { b64, open, type Sealed, siteKey, unb64 } from '../lib/seal';
+
+  /* Opens a sealed page. The derived key, not the password, is kept for this tab only, so other pages open at once. */
+  const data = document.querySelector('#sealed');
+  if (data) {
+    const sealed: Sealed = JSON.parse(data.textContent!);
+    const path = location.pathname.replace(/\/$/, '') || '/';
+    const status = document.querySelector<HTMLElement>('#status')!;
+    const show = async (key: CryptoKey) => {
+      const { title, html, nav } = JSON.parse(await open(key, sealed, path)) as { title: string; html: string; nav: [string, string][] };
+      const menu = document.createElement('nav');
+      menu.setAttribute('aria-label', 'Pages');
+      for (const [href, label] of nav) {
+        const a = Object.assign(document.createElement('a'), { href, textContent: label });
+        if (href === path) a.setAttribute('aria-current', 'page');
+        menu.appendChild(a);
+      }
+      const lock = Object.assign(document.createElement('button'), { type: 'button', className: 'quiet', textContent: 'Lock' });
+      lock.addEventListener('click', () => { sessionStorage.removeItem('folio-site-key'); location.reload(); });
+      menu.appendChild(lock);
+      document.querySelector('.bar nav')?.remove();
+      document.querySelector(".bar")!.appendChild(menu);
+      const h1 = Object.assign(document.createElement('h1'), { textContent: title, tabIndex: -1 });
+      // The text is the owner's own, rendered at build: shown as written.
+      document.querySelector('#opened')!.replaceChildren(h1, document.createRange().createContextualFragment(html));
+      document.querySelector<HTMLElement>('#opened')!.hidden = false;
+      document.querySelector('#locked')!.remove();
+      document.title = title;
+      h1.focus();
+    };
+    const kept = (() => { try { return JSON.parse(sessionStorage.getItem('folio-site-key') ?? 'null'); } catch { return null; } })();
+    if (kept?.salt === sealed.salt) {
+      crypto.subtle.importKey('raw', unb64(kept.key), 'AES-GCM', false, ['decrypt']).then(show).catch(() => sessionStorage.removeItem('folio-site-key'));
+    }
+    document.querySelector<HTMLFormElement>('#open')!.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const input = document.querySelector<HTMLInputElement>('#password')!;
+      status.textContent = 'Opening…';
+      try {
+        const key = await siteKey(input.value, unb64(sealed.salt), sealed.iter, true);
+        await show(key);
+        try { sessionStorage.setItem('folio-site-key', JSON.stringify({ salt: sealed.salt, key: b64(new Uint8Array(await crypto.subtle.exportKey('raw', key))) })); } catch { /* the tab won't remember: fine */ }
+      } catch {
+        status.textContent = 'That password doesn’t open this site.';
+        input.select();
+      }
+    });
+  }
+</script>
