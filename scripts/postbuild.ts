@@ -5,9 +5,10 @@ import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { parse } from 'yaml';
 import { leaked, readablePieces } from '../src/lib/leaks.ts';
+import { manifestFile } from '../src/lib/manifest.ts';
 
 const DIST = 'dist';
-const access = (parse(readFileSync('site.yaml', 'utf8')) ?? {}).access ?? 'public';
+const access = (parse(readFileSync(manifestFile(), 'utf8')) ?? {}).access ?? 'public';
 if (access !== 'password') process.exit(0);
 
 const fail = (why: string): never => { console.error(`postbuild: ${why}`); process.exit(1); };
