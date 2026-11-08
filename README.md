@@ -39,7 +39,7 @@ A push is usually live within two minutes. Your own computer may remember for a 
 **If something goes wrong**, the last good version stays online:
 
 - a failed test or build: nothing is published; the next push tries again;
-- a deploy the controller refuses or can't finish: the repository is marked as failing on the status page and in the controller's run log, with the reason, and is tried again after 10, 20, 40, 80 and 160 minutes (a new commit starts over).
+- a deploy the controller refuses or can't finish: the repository is marked as failing in the controller's run log, with the reason, and is tried again after 10, 20, 40, 80 and 160 minutes (a new commit starts over).
 
 **Going back**: revert the commit and push.
 
@@ -184,4 +184,3 @@ Delete `site.yaml`, archive the repository or delete it: the controller removes 
 | Roles (`admin`, `editor`, `viewer`) | Deferred, with server code: the application will check them |
 | A CMS or editor | Out of scope |
 | Google sign-in for any Google account | Waits for the Google app to be published (needs Folio's privacy page live) |
-| Status | The owner's status page, `status.oztozlu.dev`, shows the site's address and its deploy state |
