@@ -116,20 +116,15 @@ Already done for this account (8 November 2026); for the record, or to redo it:
 
 No site needs its own Google app: every `<name>.oztozlu.dev` signs in through the same Access team.
 
-### Google's Testing and Production modes
+### Google's app is published
 
-The Google app is in **Testing**: only the Google accounts on its *Test users* list (at most 100 over the app's life) can sign in with Google at all; anyone else gets an error from Google before Access sees them. To let any Google account through, the app must be **published** (Google Auth Platform → Audience → *Publish app*), which needs a home page and a privacy policy on a domain listed under *Branding* (`https://oztozlu.dev` and `https://oztozlu.dev/privacy`, once Folio is live there). Because the app has a logo, Google then asks for brand verification (a few days, with the domain verified in Search Console); removing the logo avoids it. Only basic sign-in scopes are used (name, email, profile picture).
+The Google app is **in production**: any Google account can sign in with Google, and a site's own `allow` and `deny` lists decide who gets in. Its home page and privacy policy are `https://oztozlu.dev` and `https://oztozlu.dev/privacy`. It has no logo on purpose: a logo needs Google's brand verification, which asks to prove ownership of every authorized domain, including Cloudflare Access's own `cloudflareaccess.com`. So Google's sign-in screen names the Access domain rather than an app name. Only basic sign-in scopes are used (name, email, profile picture), which need no verification.
 
-### Google's list and the site's list are different things
-
-- **Google test users** decide who Google lets sign in to the app at all (only while in Testing).
-- **`allow` / `deny`** decide who a site lets in, after Google (or the one-time code) has said who they are.
-
-With Google in Testing, a person needs both: their account on the test users list and their email in `allow`. The one-time code needs only `allow`.
+Google decides who has a Google account; the site's `allow` and `deny` decide who may enter, after Google (or the one-time code) has said who they are.
 
 ### Adding or removing someone
 
-Edit `allow` or `deny` in `site.yaml` (and, for Google in Testing, the test users list) and push. The controller updates the Access application and the site's Worker together. Removal takes effect on the next request after the deploy: the Worker checks the person against the list it was deployed with on every request, so an Access session that is still valid doesn't keep them in. Sessions last 24 hours otherwise.
+Edit `allow` or `deny` in `site.yaml` and push. The controller updates the Access application and the site's Worker together. Removal takes effect on the next request after the deploy: the Worker checks the person against the list it was deployed with on every request, so an Access session that is still valid doesn't keep them in. Sessions last 24 hours otherwise.
 
 ## An admin area
 
@@ -183,4 +178,4 @@ Delete `site.yaml`, archive the repository or delete it: the controller removes 
 | Site server code (APIs, a database, a backend behind `/api/admin`) | Deferred: sites are static files behind the controller's Worker |
 | Roles (`admin`, `editor`, `viewer`) | Deferred, with server code: the application will check them |
 | A CMS or editor | Out of scope |
-| Google sign-in for any Google account | Waits for the Google app to be published (needs Folio's privacy page live) |
+| Google sign-in for any Google account | Implemented: the Google app is published (no brand verification, so no logo) |
