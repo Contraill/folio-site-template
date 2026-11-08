@@ -1,6 +1,0 @@
-# How the Folio controller publishes this repository: push to main and it builds and deploys it.
-kind: site
-access: public              # public, access (sign-in by email) or password (the whole site is encrypted)
-# name: my-site             # its address, my-site.oztozlu.dev; by default the repository's name
-# allow: [someone@example.com]   # access: who may sign in; Cloudflare Access sends them a one-time code
-title: { en: A Folio site }

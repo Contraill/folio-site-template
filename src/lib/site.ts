@@ -1,11 +1,11 @@
-/* What folio.yaml says about this site, read at build. For a password site, the key every page is sealed with: derived
+/* What site.yaml says about this site, read at build. For a password site, the key every page is sealed with: derived
    once per build from FOLIO_PASSWORD (a secret of this repository, never in Git), with a fresh salt. */
 import { readFileSync } from 'node:fs';
 import { parse } from 'yaml';
 import { siteKey, weakness } from './seal';
 
 type Config = { access?: 'public' | 'access' | 'password'; title?: { en?: string; tr?: string } };
-export const config: Config = parse(readFileSync('folio.yaml', 'utf8')) ?? {};
+export const config: Config = parse(readFileSync('site.yaml', 'utf8')) ?? {};
 export const access = config.access ?? 'public';
 export const siteTitle = config.title?.en ?? 'Site';
 

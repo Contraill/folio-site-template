@@ -1,0 +1,20 @@
+# How the Folio controller publishes this repository. Push to main: the workflow tests and builds it, the controller
+# checks the build and serves it behind its own Worker at https://<name>.oztozlu.dev. Remove this file to take the
+# site down.
+kind: site
+access: public              # public · access (sign-in, people in allow) · password (every page encrypted at build)
+# name: my-site             # the address, my-site.oztozlu.dev; by default the repository's name in lower case
+title: { en: A Folio site }
+
+# access: access — who may sign in, and how:
+# login: otp                # otp (a one-time code by email, the default), google, or both: [otp, google]
+# allow: [someone@example.com]
+# deny: [someone-else@example.com]   # refused even if allowed
+# serviceTokens: [ci-check]          # Access service tokens, by name, for automated checks
+
+# An admin area at /admin and /api/admin, protected whatever `access` says. Off unless enabled; without it those
+# paths answer 404. The site has no backend: /api/admin/whoami tells a signed-in admin who they are, nothing more.
+# admin:
+#   enabled: true
+#   login: google
+#   allow: [you@example.com]

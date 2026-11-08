@@ -1,6 +1,6 @@
 import { defineConfig } from 'astro/config';
 
-/* Static pages. The Folio controller serves them behind its own Worker, which applies the access model in folio.yaml. */
+/* Static pages. The Folio controller serves them behind its own Worker, which applies the access model in site.yaml. */
 export default defineConfig({
   output: 'static',
   trailingSlash: 'ignore',
